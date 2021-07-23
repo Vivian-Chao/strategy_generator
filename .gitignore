@@ -1,0 +1,19 @@
+/gradle/wrapper/gradle-wrapper.properties
+##----------idea----------
+*.iml
+.idea/
+*.ipr
+*.iws
+__pycache__/
+
+##----------venv-----------
+venv/
+
+##----------Other----------
+# osx
+*~
+.DS_Store
+gradle.properties
+test*.py
+data/
+result/
