@@ -8,4 +8,5 @@
 
 __version__ = '0.1'
 __VERSION__ = __version__
-__author__ = '-CaoV  -https://github.com/ClazyCao/strategy_generator.git'
+__author__ = 'CaoV | RiskModel.DP.'
+# __author__ = '-CaoV  -https://github.com/ClazyCao/strategy_generator.git'

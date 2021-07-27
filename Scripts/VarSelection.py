@@ -23,7 +23,7 @@ def cost_time(func_name):
         st = time.time()
         rs = func_name(*args, **kwargs)
         ed = time.time()
-        print('%s, Cost Time(ms):%.2f'%(func_name.__name__, (ed - st)*100))
+        print('>>> %s, Cost Time(ms):%.2f'%(func_name.__name__, (ed - st)*100))
         return rs
     return inner
 
@@ -45,7 +45,7 @@ def check_type(data, x):
     :return: str, 'num' or 'cat'
     '''
     try:
-        if data[x].dtype in [int,float]:
+        if data[x].dtype in [int,float,'float32','float64','double']:
             rs = 'num'
         elif data[x].dtype in [object,str, bool]:
             rs = 'cat'
@@ -103,15 +103,21 @@ def cal_woe_iv_2(data , x_bin , target, good_sum, bad_sum, total_sum, total_badr
 @cost_time
 def var_select_iv(data, target, result_loc):
     '''
-    懒得写后面补
-    :param data:
-    :param target:
-    :return:
+    :param data: dataframe, data, only include variables and target
+    :param target: str, column name , means binary target(0/1)
+    :return: dataframe, IV
     '''
+    print('>>> Start...')
     df_iv = toad.quality(dataframe = data, target = target,iv_only=True, cpu_cores = -1)
     df_iv['iv'] = df_iv['iv'].apply(lambda x : format_percent(x,3))
     df_iv_out = df_iv.loc[:,['iv','unique']]
-    df_iv_out.to_csv(result_loc + 'var_iv.csv')
+    if df_iv_out[df_iv_out['iv'] >= 1].shape[0] > 0 :
+        print('>>> Those variables IV are unusual high, please check data type:',list(df_iv_out[df_iv_out['iv'] >= 1].index))
+        print('>>> ...')
+    else:
+        pass
+    df_iv_out.to_csv(result_loc + 'Var_IV.csv')
+    print('>>> Finish, IV result also has been saved as csv file at \'%s\''%(result_loc + 'Var_IV.csv'))
     return df_iv_out
 
 
@@ -267,23 +273,28 @@ def var_select_lift(data, x, target, threshold):
 # organize LIFT variable selection loop
 @cost_time
 def var_select_lift_final(data, target, threshold, result_loc):
+    '''
+    :param data:
+    :param target:
+    :param threshold:
+    :param result_loc:
+    :return:
+    '''
 
     sort_col = ['var_name', 'value', 'good', 'bad', 'total', 'total_pct', 'bad_rate', 'lift', 'woe','iv']
     df_res_tot = pd.DataFrame(columns= sort_col)
 
     x_list = data.drop(target, axis = 1).columns
+    print('>>> Start...')
     for x in x_list:
+        print('Processing %s...'%x)
         df_res = var_select_lift(data, x, target, threshold)
         df_res_tot = df_res_tot.append(df_res)
 
-    df_res_tot.to_csv(result_loc + 'var_lift.csv', index= False)
+    df_res_tot.to_csv(result_loc + 'Var_LIFT.csv', index= False)
+    print('>>> Finish, LIFT result also has been saved as csv file at \'%s\''%(result_loc + 'Var_LIFT'))
 
     return df_res_tot
-
-
-
-
-
 
 
 

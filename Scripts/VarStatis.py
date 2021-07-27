@@ -10,6 +10,7 @@ import numpy as np
 
 
 def cal_val_apply(data_bin, x, if_pas):
+
     grouped = data_bin.groupby(x)[if_pas]
     result_df = grouped.agg([('apply_cnt', 'count'),
                              ('accept_cnt', lambda y: (y == 1).sum()),
@@ -146,3 +147,40 @@ def combine_stable_metrics_table(data_bin,  tim, x, target, freq):
     result_df = pd.concat([result_df, result_df_psi.loc[:,keep_col]], axis =1).fillna(0)
 
     return result_df
+
+
+
+
+def check_target(data,target):
+    target_unique = list(data[target].unique())
+    target_unique.sort()
+    if target_unique == [0,1]:
+        pass
+    else:
+        raise ValueError('>>>There are %d unique value in target: %s, make sure it is binary target'%(len(target_unique), target_unique) )
+
+def cal_cross_var(data, target, cross_var, cal_pas = False):
+    '''
+    :param data:
+    :param target: str
+    :param cross_var: list, eg:['var1','var2']
+    :param cal_pas: bool
+    :return: dataframe
+    '''
+    if cal_pas == True:
+        prefix = 'Accpt'
+    else:
+        prefix = 'Bad'
+        check_target(data,target)
+    df_tot = data.pivot_table(index = cross_var[0], columns = cross_var[1],values= target ,aggfunc='count' ,fill_value=0)
+    df_tot.loc[:,'总计'] = df_tot.sum(axis= 1)
+    df_bad = data.pivot_table(index = cross_var[0], columns = cross_var[1],values= target ,aggfunc=np.sum ,fill_value=0)
+    df_bad.loc[:,'总计'] = df_bad.sum(axis= 1)
+    df_bad.columns = ['%s_%s'%(col,prefix) for col in df_bad.columns]
+    df_merge = pd.concat([df_tot, df_bad],axis= 1)
+    df_merge.loc['总计',:] = df_merge.sum(axis= 0)
+    # rename badrate col
+    for col in df_tot.columns:
+        df_merge['%s_%s%%'%(col,prefix)] = df_merge['%s_%s'%(col,prefix)]/(df_merge[col])
+    df_merge.drop(['总计','总计_%s'%(prefix)],axis=1, inplace=True)
+    return df_merge
